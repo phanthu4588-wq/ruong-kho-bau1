@@ -7,229 +7,380 @@
   <style>
     * {
       box-sizing: border-box;
-      font-family: "Segoe UI", system-ui, sans-serif;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     }
 
     body {
       margin: 0;
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
-      background: linear-gradient(#0b1440, #021b25);
-      color: #fff;
-      overflow: hidden;
+      background: radial-gradient(circle at top, #1a2b7a, #040816 65%);
+      color: #ffffff;
     }
 
-    .game-wrapper {
-      max-width: 900px;
+    .page {
+      max-width: 1100px;
       width: 100%;
-      padding: 24px;
-      text-align: center;
+      padding: 24px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
 
-    h1 {
-      margin-bottom: 8px;
-      font-size: 2rem;
-      text-transform: uppercase;
+    header {
+      text-align: left;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 2.2rem;
       letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 0.98rem;
     }
 
     .content {
+      flex: 1;
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
       gap: 24px;
       align-items: center;
     }
 
-    @media (max-width: 768px) {
-      .content { grid-template-columns: 1fr; }
+    @media (max-width: 820px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+      header h1 {
+        font-size: 1.9rem;
+      }
     }
 
-    /* RƯƠNG */
-    .treasure-area {
+    /* Vùng rương kho báu */
+    .chest-area {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 16px;
     }
 
-    .chest {
+    .chest-wrapper {
       position: relative;
-      width: 280px;
-      height: 200px;
-      perspective: 800px;
+      max-width: 420px;
+      width: 100%;
+      padding: 16px;
+      border-radius: 24px;
+      background: radial-gradient(circle at top, rgba(255,255,255,0.1), rgba(0,0,0,0.4));
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+      overflow: visible;
+      text-align: center;
+    }
+
+    .chest-wrapper::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      pointer-events: none;
+    }
+
+    .chest-img {
+      width: 100%;
+      max-width: 380px;
+      display: block;
       margin: 0 auto;
+      filter: drop-shadow(0 14px 22px rgba(0,0,0,0.7));
+      transition: transform 0.5s ease, filter 0.6s ease;
     }
 
-    .chest-base {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 60%;
-      background: linear-gradient(#b36a24, #7d4413);
-      border-radius: 0 0 26px 26px;
-      border: 4px solid #3c1c07;
-      box-shadow: 0 12px 25px rgba(0,0,0,0.5);
+    .chest-wrapper.opened .chest-img {
+      transform: translateY(-6px) scale(1.02);
+      filter: drop-shadow(0 18px 30px rgba(255,215,0,0.75));
     }
 
-    .chest-lid {
+    .glow {
       position: absolute;
-      bottom: 60%;
-      width: 100%;
-      height: 65%;
-      background: linear-gradient(#c77b2e, #8e4c16);
-      border-radius: 26px 26px 10px 10px;
-      border: 4px solid #3c1c07;
-      transform-origin: bottom center;
-      transform: rotateX(0deg);
-      transition: transform 0.9s cubic-bezier(0.25, 0.9, 0.3, 1.4);
-    }
-
-    .chest.open .chest-lid { transform: rotateX(-115deg); }
-
-    .sparkles {
-      position: absolute;
-      inset: -40px;
+      inset: 0;
+      pointer-events: none;
       opacity: 0;
       background:
-        radial-gradient(circle, rgba(255,255,255,0.8) 0 10%, transparent 60%),
-        radial-gradient(circle, rgba(255,255,255,0.9) 0 10%, transparent 60%);
-      filter: blur(2px);
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(circle at 15% 60%, rgba(255,255,255,0.4), transparent 55%),
+        radial-gradient(circle at 85% 65%, rgba(255,255,255,0.4), transparent 55%);
       mix-blend-mode: screen;
-      transition: opacity 0.7s ease-out;
-    }
-    .chest.open .sparkles { opacity: 1; }
-
-    /* Shake khi sai */
-    .chest.shake { animation: shake 0.4s; }
-    @keyframes shake {
-      0%,100%{transform:translateX(0);}
-      25%{transform:translateX(-6px);}
-      50%{transform:translateX(6px);}
-      75%{transform:translateX(-6px);}
+      transition: opacity 0.6s ease-out;
     }
 
-    /* Form nhập */
+    .chest-wrapper.opened .glow {
+      opacity: 1;
+    }
+
+    .badge {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: radial-gradient(circle at 30% 20%, #fff9c4, #ffb300);
+      border-radius: 999px;
+      padding: 10px 18px 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .badge-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #fff9c4, #ff9100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.85);
+    }
+
+    .badge-circle span {
+      font-size: 1.4rem;
+    }
+
+    .badge-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .chest-wrapper.opened .badge {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    /* Panel nhập mật mã */
     .panel {
-      background: rgba(0,0,0,0.32);
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.45);
+      border-radius: 20px;
+      padding: 20px 20px 22px;
+      box-shadow: 0 16px 32px rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      max-width: 360px;
+      margin-left: auto;
     }
-    input {
+
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 1.3rem;
+    }
+
+    .panel p {
+      margin: 0 0 16px;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+
+    .label {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      opacity: 0.9;
+      text-align: left;
+    }
+
+    .hint {
+      font-size: 0.85rem;
+      margin-top: 2px;
+      text-align: left;
+      opacity: 0.75;
+    }
+
+    input[type="text"] {
       width: 100%;
-      padding: 12px;
+      padding: 11px 13px;
       border-radius: 999px;
       border: none;
       outline: none;
-      margin-bottom: 10px;
       font-size: 1rem;
+      margin-bottom: 10px;
     }
+
     button {
       width: 100%;
-      padding: 12px;
+      padding: 11px 16px;
       border-radius: 999px;
       border: none;
-      cursor: pointer;
-      background: linear-gradient(135deg, #ffe259, #ffa751);
-      font-weight: bold;
+      outline: none;
+      font-size: 0.98rem;
+      font-weight: 600;
       letter-spacing: 1px;
-      margin-bottom: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7c4dff, #536dfe);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+      text-transform: uppercase;
+      margin-top: 4px;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
     }
-    button:hover { filter: brightness(1.07); }
 
-    .message { min-height: 22px; }
-    .ok { color: #9cffb5; }
-    .err { color: #ff9c9c; }
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+    }
 
-    /* CONFETTI */
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+
+    .message {
+      margin-top: 8px;
+      min-height: 20px;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    .message.ok {
+      color: #b2ffb4;
+    }
+    .message.err {
+      color: #ffb0b0;
+    }
+
+    /* Shake khi sai */
+    .shake {
+      animation: shake 0.35s;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    /* Confetti */
     .confetti {
       position: fixed;
       top: -10vh;
-      width: 10px;
+      width: 9px;
       height: 18px;
-      opacity: 0.9;
+      border-radius: 3px;
+      opacity: 0.95;
+      pointer-events: none;
       animation: fall linear forwards;
+      z-index: 50;
     }
+
     @keyframes fall {
       to {
-        transform: translateY(110vh) rotate(720deg);
+        transform: translateY(115vh) rotate(720deg);
         opacity: 0;
       }
     }
 
-    /* TREASURE */
-    .treasure-msg {
-      opacity: 0;
-      margin-top: 14px;
-      font-size: 1.1rem;
-      transition: opacity 1s;
-    }
-    .showRewards .treasure-msg,
-    .showRewards .gems {
-      opacity: 1;
-    }
-
-    .gems {
-      opacity: 0;
-      width: 200px;
-      margin: 12px auto 0;
-      transition: opacity 1s;
+    footer {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      text-align: left;
     }
   </style>
 </head>
 <body>
-  <div class="game-wrapper">
-    <h1>RƯƠNG KHO BÁU BÍ MẬT</h1>
+  <div class="page">
+    <header>
+      <h1>RƯƠNG KHO BÁU BÍ MẬT</h1>
+      <p>Nhập đúng mật mã, rương sẽ mở ra và kho báu xuất hiện! ✨</p>
+    </header>
 
-    <div class="content">
-      <!-- RƯƠNG -->
-      <div class="treasure-area">
-        <div class="chest" id="chest">
-          <div class="chest-lid"></div>
-          <div class="chest-base"></div>
-          <div class="sparkles"></div>
+    <main class="content">
+      <!-- KHỐI RƯƠNG -->
+      <section class="chest-area">
+        <div class="chest-wrapper" id="chestWrapper">
+          <!-- ĐỔI src này thành tên file hình rương ĐÓNG của cô -->
+          <img
+            id="chestImg"
+            class="chest-img"
+            src="ruong-dong.png"
+            alt="Rương kho báu"
+          />
+          <div class="glow"></div>
+
+          <!-- Huy hiệu -->
+          <div class="badge" id="badge">
+            <div class="badge-circle">
+              <span>⭐</span>
+            </div>
+            <div class="badge-text">Nhà sắp xếp thông minh</div>
+          </div>
         </div>
+      </section>
 
-        <!-- Kho báu xuất hiện -->
-        <img src="https://i.ibb.co/zby8Dmc/gems.png" class="gems" id="gems">
-        <div class="treasure-msg" id="msgBonus">
-          🌟 Bé đã mở khóa thành công!  
-          <br> 🎉 Chúc mừng con: Con thật xuất sắc! 🌈
+      <!-- KHỐI NHẬP MẬT MÃ -->
+      <section>
+        <div class="panel">
+          <h2>Mở rương kho báu</h2>
+          <p>Hãy nhập đúng mật mã bí mật mà cô đã gợi ý sau khi con sắp xếp sách thật tốt nhé.</p>
+
+          <div class="label">Nhập mật mã</div>
+          <input
+            id="codeInput"
+            type="text"
+            placeholder="Gõ mật mã vào đây..."
+            autocomplete="off"
+          />
+          <div class="hint">Gợi ý: <strong>Sắp xếp tốt</strong></div>
+
+          <button id="openBtn">Mở rương</button>
+
+          <div class="message" id="message"></div>
         </div>
-      </div>
+      </section>
+    </main>
 
-      <!-- PANEL MẬT MÃ -->
-      <div class="panel">
-        <h3>Nhập mật mã mở rương</h3>
-        <p>Gợi ý: Sắp xếp sách thật tốt</p>
-
-        <input id="codeInput" type="text" placeholder="Nhập mật mã..." />
-
-        <button id="openBtn">Mở Rương</button>
-
-        <div class="message" id="msg"></div>
-      </div>
-    </div>
+    <footer>
+      Mật mã không phân biệt chữ hoa, chữ thường, có thể bỏ dấu và khoảng trắng.
+    </footer>
   </div>
 
   <script>
-    const SECRET_CODE = "SẮP XẾP TỐT"; 
+    // ==========================
+    //   CÀI ĐẶT CỦA CÔ GIÁO
+    // ==========================
+    // Mật mã gốc (có dấu)
+    const SECRET_CODE = "SẮP XẾP TỐT";
 
-    const chest = document.getElementById("chest");
+    // Đổi tên file ảnh rương ĐÓNG / MỞ theo file cô upload
+    const closedChestSrc = "ruong-dong.png";
+    const openChestSrc = "ruong-mo.png"; // nếu chưa có hình rương mở, tạm thời dùng cùng với closedChestSrc
+
+    const chestWrapper = document.getElementById("chestWrapper");
+    const chestImg = document.getElementById("chestImg");
+    const badge = document.getElementById("badge");
     const input = document.getElementById("codeInput");
     const btn = document.getElementById("openBtn");
-    const msg = document.getElementById("msg");
-    const bonus = document.getElementById("msgBonus");
-    const gems = document.getElementById("gems");
+    const msg = document.getElementById("message");
 
+    // Hàm chuẩn hóa chuỗi:
+    // - chuyển NFD để tách dấu
+    // - xóa dấu tiếng Việt
+    // - xóa toàn bộ khoảng trắng
+    // - chuyển về chữ thường
     function normalize(str) {
       return str
-        .normalize("NFD") 
-        .replace(/[\u0300-\u036f]/g, "") 
-        .replace(/\s+/g, "") 
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "")
         .toLowerCase();
     }
 
@@ -237,46 +388,64 @@
       for (let i = 0; i < 80; i++) {
         const div = document.createElement("div");
         div.className = "confetti";
-        div.style.left = Math.random() * 100 + "vw";
-        div.style.background = `
-          hsl(${Math.random()*360},100%,50%)`;
-        div.style.animationDuration = 2 + Math.random() * 3 + "s";
+        const left = Math.random() * 100;
+        const duration = 2 + Math.random() * 3;
+        const hue = Math.floor(Math.random() * 360);
+
+        div.style.left = left + "vw";
+        div.style.animationDuration = duration + "s";
+        div.style.background =
+          "hsl(" + hue + ", 100%, " + (50 + Math.random() * 10) + "%)";
+
         document.body.appendChild(div);
 
-        setTimeout(() => div.remove(), 5000);
+        setTimeout(() => {
+          div.remove();
+        }, duration * 1000 + 500);
       }
     }
 
-    function checkCode() {
-      const value = normalize(input.value);
-      const key = normalize(SECRET_CODE);
+    function openChest() {
+      chestWrapper.classList.add("opened");
+      chestImg.src = openChestSrc || closedChestSrc;
+      msg.textContent = "Tuyệt vời! Rương đã mở, con nhận được huy hiệu thưởng ✨";
+      msg.className = "message ok";
+      createConfetti();
+    }
 
+    function shakeChest() {
+      chestWrapper.classList.remove("shake");
+      void chestWrapper.offsetWidth; // trick để reset animation
+      chestWrapper.classList.add("shake");
+    }
+
+    function checkCode() {
+      const value = input.value.trim();
       if (!value) {
-        msg.textContent = "Nhập mật mã trước nhé!";
-        msg.className = "err";
-        chest.classList.add("shake");
-        setTimeout(() => chest.classList.remove("shake"), 400);
+        msg.textContent = "Hãy nhập mật mã trước đã nhé!";
+        msg.className = "message err";
+        shakeChest();
         return;
       }
 
-      if (value === key) {
-        msg.textContent = "Tuyệt vời! Rương đã mở ✨";
-        msg.className = "ok";
+      const userCode = normalize(value);
+      const secret = normalize(SECRET_CODE);
 
-        chest.classList.add("open");
-        document.body.classList.add("showRewards");
-
-        createConfetti();
+      if (userCode === secret) {
+        openChest();
       } else {
-        msg.textContent = "Sai mật mã, thử lại nhen!";
-        msg.className = "err";
-        chest.classList.add("shake");
-        setTimeout(() => chest.classList.remove("shake"), 400);
+        msg.textContent = "Sai mật mã rồi, con thử lại nhé! 👀";
+        msg.className = "message err";
+        shakeChest();
       }
     }
 
     btn.addEventListener("click", checkCode);
-    input.addEventListener("keyup", e => e.key === "Enter" && checkCode());
+    input.addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        checkCode();
+      }
+    });
   </script>
 </body>
 </html>
