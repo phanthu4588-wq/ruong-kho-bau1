@@ -1,54 +1,81 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>Trò chơi mới</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5fbff;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      margin-bottom: 10px;
-    }
-    #game {
-      margin: 20px auto;
-      max-width: 800px;
-      border: 2px dashed #999;
-      padding: 20px;
-      border-radius: 10px;
-      min-height: 200px;
-      background: #ffffff;
-    }
-    .note {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #555;
-    }
-    a {
-      color: #0077cc;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Game Kéo thả Rau Củ Quả</title>
+<style>
+  body{font-family:sans-serif;text-align:center;}
+  h2{margin-bottom:20px;}
+  .items{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:25px;}
+  .item{padding:8px 15px;border-radius:15px;background:#ffd6e8;cursor:grab;font-weight:bold;border:1px solid #d090af;}
+  .box-container{display:flex;justify-content:center;gap:30px;}
+  .box{width:180px;height:180px;border:3px dashed #888;border-radius:10px;padding:10px;}
+  .box h3{margin-top:0;}
+  .correct{border:3px solid green;}
+  .shake{animation:shake 0.3s;}
+  @keyframes shake{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    50%{transform:translateX(6px);}
+    75%{transform:translateX(-6px);}
+    100%{transform:translateX(0);}
+  }
+</style>
 </head>
 <body>
-  <h1>TRÒ CHƠI MỚI</h1>
-  <h3>(Sân khấu để cô Thu thiết kế trò chơi)</h3>
 
-  <div id="game">
-    <!-- TẠI ĐÂY SẼ VIẾT CODE TRÒ CHƠI MỚI -->
-    <p>Chào mừng đến với trò chơi mới!</p>
-    <p>Cô có thể nhờ ChatGPT viết thêm code kéo thả / trắc nghiệm… và dán vào đây.</p>
-  </div>
+<h2>🎮 Kéo thả các loại Rau – Củ – Quả vào đúng ô!</h2>
 
-  <div class="note">
-    <p>Trò chơi kho báu cũ: 
-      <a href="index-kho-bau.html">Mở trò chơi kho báu</a>
-    </p>
-  </div>
+<div class="items">
+  <div class="item" draggable="true" data-type="củ">Khoai tây</div>
+  <div class="item" draggable="true" data-type="củ">Su hào</div>
+  <div class="item" draggable="true" data-type="củ">Cà rốt</div>
 
-  <!-- Sau này thêm <script> ... </script> để viết logic trò chơi -->
+  <div class="item" draggable="true" data-type="quả">Dưa hấu</div>
+  <div class="item" draggable="true" data-type="quả">Nho</div>
+  <div class="item" draggable="true" data-type="quả">Mít</div>
+  <div class="item" draggable="true" data-type="quả">Nhãn</div>
+
+  <div class="item" draggable="true" data-type="rau">Bắp cải</div>
+  <div class="item" draggable="true" data-type="rau">Mồng tơi</div>
+  <div class="item" draggable="true" data-type="rau">Cà tím</div>
+</div>
+
+<div class="box-container">
+  <div class="box" data-accept="củ"><h3>Củ</h3></div>
+  <div class="box" data-accept="quả"><h3>Quả</h3></div>
+  <div class="box" data-accept="rau"><h3>Rau</h3></div>
+</div>
+
+<script>
+  const items = document.querySelectorAll('.item');
+  const boxes = document.querySelectorAll('.box');
+
+  items.forEach(item=>{
+    item.addEventListener('dragstart', ()=>{
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend', ()=>{
+      item.classList.remove('dragging');
+    });
+  });
+
+  boxes.forEach(box=>{
+    box.addEventListener('dragover', e=>{
+      e.preventDefault();
+    });
+
+    box.addEventListener('drop', ()=>{
+      const dragging = document.querySelector('.dragging');
+      if(dragging.dataset.type === box.dataset.accept){
+        box.appendChild(dragging);
+        box.classList.add("correct");
+      } else {
+        dragging.classList.add('shake');
+        setTimeout(()=> dragging.classList.remove('shake'), 400);
+      }
+    });
+  });
+</script>
 </body>
 </html>
