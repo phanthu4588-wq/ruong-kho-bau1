@@ -28,7 +28,6 @@
     flex:2 1 380px;border-radius:15px;padding:15px;background:#fff;
     box-shadow:0 0 6px rgba(0,0,0,0.08);
   }
-
   .supermarket-title{text-align:center;margin-bottom:10px;font-weight:600;}
   .zones{display:grid;grid-template-columns:repeat(2,minmax(160px,1fr));gap:12px;}
 
@@ -78,6 +77,12 @@
   .btn:hover{filter:brightness(.96);}
   .success{color:#16a34a;font-size:18px;}
 
+  #timer{
+    font-weight:600;
+    font-size:18px;
+    color:#d10000;
+  }
+
   /* FIREWORK CANVAS */
   #fireworks {
     position: fixed;
@@ -99,7 +104,12 @@
   Kéo các mặt hàng từ <b>Giỏ hàng</b> sang đúng khu <b>Vegetables / Bakery / Drinks / Home care</b>.
 </p>
 
+<div style="text-align:center;margin:8px 0;">
+ ⏳ Thời gian còn lại: <span id="timer">02:00</span>
+</div>
+
 <div class="wrapper">
+  <!-- GIỎ HÀNG -->
   <section class="basket">
     <h2>🧺 GIỎ HÀNG (20 vật phẩm)</h2>
     <div class="items-grid" id="basket">
@@ -135,7 +145,7 @@
     </div>
   </section>
 
-  <!-- Zones -->
+  <!-- ZONES -->
   <section class="supermarket">
     <h2 class="supermarket-title">🏪 SƠ ĐỒ SIÊU THỊ</h2>
     <div class="zones">
@@ -169,7 +179,7 @@
   <button class="btn" id="resetBtn">🔁 Chơi lại</button>
 </div>
 
-<!-- Âm thanh ting đúng đáp án (Base64) -->
+<!-- Âm thanh ting đúng đáp án (Base64 tiếng ting) -->
 <audio id="dingSound">
   <source src="data:audio/mp3;base64,//uQxAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA///////..." type="audio/mp3">
 </audio>
@@ -181,13 +191,8 @@
 let fwCanvas = document.getElementById("fireworks");
 let ctx = fwCanvas.getContext("2d");
 let fireworks = [];
-let interval;
-function resizeFW(){
-  fwCanvas.width = innerWidth;
-  fwCanvas.height = innerHeight;
-}
-resizeFW();
-addEventListener("resize",resizeFW);
+function resizeFW(){fwCanvas.width = innerWidth;fwCanvas.height = innerHeight;}
+resizeFW();addEventListener("resize",resizeFW);
 
 function launchFirework(){
   for(let i=0;i<20;i++){
@@ -204,21 +209,14 @@ function launchFirework(){
 
 function runFireworks(){
   ctx.clearRect(0,0,fwCanvas.width,fwCanvas.height);
-  fireworks.forEach((p,i)=>{
-    p.x+=p.vx;
-    p.y+=p.vy;
-    p.life--;
+  fireworks.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.life--;
     ctx.fillStyle=p.color;
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,4,0,Math.PI*2);
-    ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();
   });
   fireworks=fireworks.filter(p=>p.life>0);
-  if(fireworks.length){
-    requestAnimationFrame(runFireworks);
-  } else {
-    fwCanvas.style.display="none";
-  }
+  if(fireworks.length){requestAnimationFrame(runFireworks);}
+  else fwCanvas.style.display="none";
 }
 
 /* --------------------------
@@ -231,23 +229,53 @@ const zones = document.querySelectorAll(".zone");
 let items = document.querySelectorAll(".item");
 const total = items.length;
 let correctCount = 0;
+let timeLeft = 120;
+let timerElement = document.getElementById("timer");
 
 const ding = document.getElementById("dingSound");
+let timeUp = false;
 
+/* SHUFFLE ITEM MESSY */
+function shuffleItems(){
+  let arr = Array.from(items);
+  arr.sort(()=>Math.random()-0.5);
+  arr.forEach(i=>basket.appendChild(i));
+}
+
+shuffleItems();
+
+/* TIMER */
+let countdown = setInterval(()=>{
+  if(correctCount===total){clearInterval(countdown);return;}
+  timeLeft--;
+  let m=Math.floor(timeLeft/60).toString().padStart(2,"0");
+  let s=(timeLeft%60).toString().padStart(2,"0");
+  timerElement.textContent=`${m}:${s}`;
+
+  if(timeLeft<=0){
+    clearInterval(countdown);
+    timeUp = true;
+    timerElement.textContent="HẾT GIỜ!";
+    timerElement.style.color="red";
+    disableAll();
+  }
+},1000);
+
+function disableAll(){
+  items.forEach(i=>i.setAttribute("draggable","false"));
+}
+
+/* STATUS UPDATE */
 function updateStatus(){
   statusText.innerHTML = `Đã sắp xếp: ${correctCount} / ${total}`;
   if(correctCount === total){
-    // hiệu ứng hoàn thành
     statusText.classList.add("success");
     statusText.innerHTML += `<br>✨ Tuyệt vời! Bạn là khách hàng siêu thông minh!
       <br><b>MẬT MÃ THỨ 3: "TỐT"</b>`;
 
-    // chạy pháo hoa
     fwCanvas.style.display="block";
     launchFirework();
     runFireworks();
-  } else {
-    statusText.classList.remove("success");
   }
 }
 
@@ -255,20 +283,14 @@ function addItemEvents(item){
   item.addEventListener("dragstart", ()=>item.classList.add("dragging"));
   item.addEventListener("dragend", ()=>item.classList.remove("dragging"));
 }
-
 items.forEach(addItemEvents);
 
+/* DROP SYSTEM */
 zones.forEach(zone=>{
-  zone.addEventListener("dragover", e=>{
-    e.preventDefault();
-    zone.classList.add("over");
-  });
-
-  zone.addEventListener("dragleave", ()=>zone.classList.remove("over"));
+  zone.addEventListener("dragover", e=>{if(!timeUp)e.preventDefault();});
 
   zone.addEventListener("drop", ()=>{
-    zone.classList.remove("over");
-
+    if(timeUp) return;
     const dragging = document.querySelector(".item.dragging");
     if(!dragging) return;
 
@@ -292,10 +314,15 @@ zones.forEach(zone=>{
   });
 });
 
+/* RESET */
 resetBtn.addEventListener("click", ()=>{
+  clearInterval(countdown);
+  timeLeft = 120;
+  timeUp=false;
+
+  items = document.querySelectorAll(".item");
   correctCount = 0;
 
-  items=document.querySelectorAll(".item");
   items.forEach(item=>{
     item.classList.remove("placed");
     item.setAttribute("draggable","true");
@@ -303,10 +330,31 @@ resetBtn.addEventListener("click", ()=>{
     addItemEvents(item);
   });
 
+  shuffleItems();
+
   statusText.classList.remove("success");
   fwCanvas.style.display="none";
   fireworks=[];
   updateStatus();
+
+  timerElement.style.color="#d10000";
+  timerElement.textContent="02:00";
+
+  countdown = setInterval(()=>{
+    if(correctCount===total){clearInterval(countdown);return;}
+    timeLeft--;
+    let m=Math.floor(timeLeft/60).toString().padStart(2,"0");
+    let s=(timeLeft%60).toString().padStart(2,"0");
+    timerElement.textContent=`${m}:${s}`;
+
+    if(timeLeft<=0){
+      clearInterval(countdown);
+      timeUp = true;
+      timerElement.textContent="HẾT GIỜ!";
+      timerElement.style.color="red";
+      disableAll();
+    }
+  },1000);
 });
 
 updateStatus();
