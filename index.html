@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rương Kho Báu Bí Mật</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(#0b1440, #021b25);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .game-wrapper {
+      max-width: 900px;
+      width: 100%;
+      padding: 24px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 24px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .content { grid-template-columns: 1fr; }
+    }
+
+    /* RƯƠNG */
+    .treasure-area {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .chest {
+      position: relative;
+      width: 280px;
+      height: 200px;
+      perspective: 800px;
+      margin: 0 auto;
+    }
+
+    .chest-base {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 60%;
+      background: linear-gradient(#b36a24, #7d4413);
+      border-radius: 0 0 26px 26px;
+      border: 4px solid #3c1c07;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.5);
+    }
+
+    .chest-lid {
+      position: absolute;
+      bottom: 60%;
+      width: 100%;
+      height: 65%;
+      background: linear-gradient(#c77b2e, #8e4c16);
+      border-radius: 26px 26px 10px 10px;
+      border: 4px solid #3c1c07;
+      transform-origin: bottom center;
+      transform: rotateX(0deg);
+      transition: transform 0.9s cubic-bezier(0.25, 0.9, 0.3, 1.4);
+    }
+
+    .chest.open .chest-lid { transform: rotateX(-115deg); }
+
+    .sparkles {
+      position: absolute;
+      inset: -40px;
+      opacity: 0;
+      background:
+        radial-gradient(circle, rgba(255,255,255,0.8) 0 10%, transparent 60%),
+        radial-gradient(circle, rgba(255,255,255,0.9) 0 10%, transparent 60%);
+      filter: blur(2px);
+      mix-blend-mode: screen;
+      transition: opacity 0.7s ease-out;
+    }
+    .chest.open .sparkles { opacity: 1; }
+
+    /* Shake khi sai */
+    .chest.shake { animation: shake 0.4s; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0);}
+      25%{transform:translateX(-6px);}
+      50%{transform:translateX(6px);}
+      75%{transform:translateX(-6px);}
+    }
+
+    /* Form nhập */
+    .panel {
+      background: rgba(0,0,0,0.32);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 999px;
+      border: none;
+      outline: none;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffe259, #ffa751);
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    button:hover { filter: brightness(1.07); }
+
+    .message { min-height: 22px; }
+    .ok { color: #9cffb5; }
+    .err { color: #ff9c9c; }
+
+    /* CONFETTI */
+    .confetti {
+      position: fixed;
+      top: -10vh;
+      width: 10px;
+      height: 18px;
+      opacity: 0.9;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* TREASURE */
+    .treasure-msg {
+      opacity: 0;
+      margin-top: 14px;
+      font-size: 1.1rem;
+      transition: opacity 1s;
+    }
+    .showRewards .treasure-msg,
+    .showRewards .gems {
+      opacity: 1;
+    }
+
+    .gems {
+      opacity: 0;
+      width: 200px;
+      margin: 12px auto 0;
+      transition: opacity 1s;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-wrapper">
+    <h1>RƯƠNG KHO BÁU BÍ MẬT</h1>
+
+    <div class="content">
+      <!-- RƯƠNG -->
+      <div class="treasure-area">
+        <div class="chest" id="chest">
+          <div class="chest-lid"></div>
+          <div class="chest-base"></div>
+          <div class="sparkles"></div>
+        </div>
+
+        <!-- Kho báu xuất hiện -->
+        <img src="https://i.ibb.co/zby8Dmc/gems.png" class="gems" id="gems">
+        <div class="treasure-msg" id="msgBonus">
+          🌟 Bé đã mở khóa thành công!  
+          <br> 🎉 Chúc mừng con: Con thật xuất sắc! 🌈
+        </div>
+      </div>
+
+      <!-- PANEL MẬT MÃ -->
+      <div class="panel">
+        <h3>Nhập mật mã mở rương</h3>
+        <p>Gợi ý: Sắp xếp sách thật tốt</p>
+
+        <input id="codeInput" type="text" placeholder="Nhập mật mã..." />
+
+        <button id="openBtn">Mở Rương</button>
+
+        <div class="message" id="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SECRET_CODE = "SẮP XẾP TỐT"; 
+
+    const chest = document.getElementById("chest");
+    const input = document.getElementById("codeInput");
+    const btn = document.getElementById("openBtn");
+    const msg = document.getElementById("msg");
+    const bonus = document.getElementById("msgBonus");
+    const gems = document.getElementById("gems");
+
+    function normalize(str) {
+      return str
+        .normalize("NFD") 
+        .replace(/[\u0300-\u036f]/g, "") 
+        .replace(/\s+/g, "") 
+        .toLowerCase();
+    }
+
+    function createConfetti() {
+      for (let i = 0; i < 80; i++) {
+        const div = document.createElement("div");
+        div.className = "confetti";
+        div.style.left = Math.random() * 100 + "vw";
+        div.style.background = `
+          hsl(${Math.random()*360},100%,50%)`;
+        div.style.animationDuration = 2 + Math.random() * 3 + "s";
+        document.body.appendChild(div);
+
+        setTimeout(() => div.remove(), 5000);
+      }
+    }
+
+    function checkCode() {
+      const value = normalize(input.value);
+      const key = normalize(SECRET_CODE);
+
+      if (!value) {
+        msg.textContent = "Nhập mật mã trước nhé!";
+        msg.className = "err";
+        chest.classList.add("shake");
+        setTimeout(() => chest.classList.remove("shake"), 400);
+        return;
+      }
+
+      if (value === key) {
+        msg.textContent = "Tuyệt vời! Rương đã mở ✨";
+        msg.className = "ok";
+
+        chest.classList.add("open");
+        document.body.classList.add("showRewards");
+
+        createConfetti();
+      } else {
+        msg.textContent = "Sai mật mã, thử lại nhen!";
+        msg.className = "err";
+        chest.classList.add("shake");
+        setTimeout(() => chest.classList.remove("shake"), 400);
+      }
+    }
+
+    btn.addEventListener("click", checkCode);
+    input.addEventListener("keyup", e => e.key === "Enter" && checkCode());
+  </script>
+</body>
+</html>
